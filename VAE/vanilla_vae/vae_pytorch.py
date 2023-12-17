@@ -7,18 +7,37 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import os
 from torch.autograd import Variable
-from tensorflow.examples.tutorials.mnist import input_data
+#from tensorflow.examples.tutorials.mnist import input_data
+import tensorflow as tf
 
 
-mnist = input_data.read_data_sets('../../MNIST_data', one_hot=True)
+#mnist = input_data.read_data_sets('../../MNIST_data', one_hot=True)
+mnist = tf.keras.datasets.mnist.load_data()
 mb_size = 64
 Z_dim = 100
-X_dim = mnist.train.images.shape[1]
-y_dim = mnist.train.labels.shape[1]
+# X_dim = mnist.train.images.shape[1]
+# y_dim = mnist.train.labels.shape[1]
+X_train, y_train = mnist[0]
+X_test, y_test = mnist[1]
+X_train, X_test = X_train/255., X_test/255.
+
+X_dim = mnist[0][0].shape[1]
+y_dim = 1
 h_dim = 128
 c = 0
 lr = 1e-3
 
+def next_batch(num, data, labels):
+    '''
+    Return a total of `num` random samples and labels.
+    '''
+    idx = np.arange(0 , len(data))
+    np.random.shuffle(idx)
+    idx = idx[:num]
+    data_shuffle = [data[ i] for i in idx]
+    labels_shuffle = [labels[ i] for i in idx]
+
+    return np.asarray(data_shuffle, dtype=np.float32), np.asarray(labels_shuffle)
 
 def xavier_init(size):
     in_dim = size[0]
@@ -39,7 +58,7 @@ bhz_var = Variable(torch.zeros(Z_dim), requires_grad=True)
 
 
 def Q(X):
-    h = nn.relu(X @ Wxh + bxh.repeat(X.size(0), 1))
+    h = nn.relu(X @ Wxh + bxh.repeat(X.size(0), 1))   # @ is matrix multiplication in numpy
     z_mu = h @ Whz_mu + bhz_mu.repeat(h.size(0), 1)
     z_var = h @ Whz_var + bhz_var.repeat(h.size(0), 1)
     return z_mu, z_var
@@ -73,7 +92,7 @@ params = [Wxh, bxh, Whz_mu, bhz_mu, Whz_var, bhz_var,
 solver = optim.Adam(params, lr=lr)
 
 for it in range(100000):
-    X, _ = mnist.train.next_batch(mb_size)
+    X, _ = next_batch(mb_size, X_train, y_train)
     X = Variable(torch.from_numpy(X))
 
     # Forward
