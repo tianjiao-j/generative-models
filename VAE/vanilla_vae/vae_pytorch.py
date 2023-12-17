@@ -19,9 +19,10 @@ Z_dim = 100
 # y_dim = mnist.train.labels.shape[1]
 X_train, y_train = mnist[0]
 X_test, y_test = mnist[1]
+X_train, X_test = X_train.reshape(-1, 784), X_test.reshape(-1, 784)
 X_train, X_test = X_train/255., X_test/255.
 
-X_dim = mnist[0][0].shape[1]
+X_dim = X_train.shape[1]
 y_dim = 1
 h_dim = 128
 c = 0
@@ -34,8 +35,8 @@ def next_batch(num, data, labels):
     idx = np.arange(0 , len(data))
     np.random.shuffle(idx)
     idx = idx[:num]
-    data_shuffle = [data[ i] for i in idx]
-    labels_shuffle = [labels[ i] for i in idx]
+    data_shuffle = [data[i] for i in idx]
+    labels_shuffle = [labels[i] for i in idx]
 
     return np.asarray(data_shuffle, dtype=np.float32), np.asarray(labels_shuffle)
 
@@ -119,7 +120,7 @@ for it in range(100000):
 
     # Print and plot every now and then
     if it % 1000 == 0:
-        print('Iter-{}; Loss: {:.4}'.format(it, loss.data[0]))
+        print('Iter-{}; Loss: {:.4}'.format(it, loss.item()))
 
         samples = P(z).data.numpy()[:16]
 
